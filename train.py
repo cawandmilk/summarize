@@ -129,13 +129,13 @@ def define_argparser() -> argparse.Namespace:
             "Default=%(default)s",
         ]),
     )
-    p.add_argument(
-        "--use_radam",
-        action="store_false",  ## default: true
-        help=" ".join([
-            "Default=%(default)s",
-        ]),
-    )
+    # p.add_argument(
+    #     "--use_radam",
+    #     action="store_false",  ## default: true
+    #     help=" ".join([
+    #         "Default=%(default)s",
+    #     ]),
+    # )
     p.add_argument(
         "--inp_max_len", 
         type=int, 
@@ -230,11 +230,6 @@ def get_tokenizer_and_model(config: argparse.Namespace) -> tuple:
 #     return optimizer, scheduler
 
 
-def get_metric():
-    ## Get a metric.
-    return datasets.load_metric("rouge")
-
-
 def main(config: argparse.Namespace) -> None:
     def print_config(config: argparse.Namespace) -> None:
         pprint.PrettyPrinter(indent=4, sort_dicts=False).pprint(vars(config))
@@ -275,7 +270,7 @@ def main(config: argparse.Namespace) -> None:
         do_eval=True,
         do_predict=False,
         evaluation_strategy="epoch",
-        prediction_loss_only=True,
+        # prediction_loss_only=True,
         per_device_train_batch_size=config.per_replica_batch_size,
         per_device_eval_batch_size=config.per_replica_batch_size,
         gradient_accumulation_steps=config.gradient_accumulation_steps,
@@ -288,6 +283,7 @@ def main(config: argparse.Namespace) -> None:
         logging_strategy="steps",
         logging_steps=10,
         save_strategy="epoch",
+        # save_total_limit=3,
         # save_steps=1000,
         fp16=True,
         dataloader_num_workers=4,
@@ -304,7 +300,6 @@ def main(config: argparse.Namespace) -> None:
         train_dataset=tr_ds,
         eval_dataset=ts_ds,
         tokenizer=tokenizer,
-        compute_metrics=get_metric(),
         # optimizers=get_optimizer_and_scheduler(
         #     config, 
         #     model, 
@@ -317,13 +312,11 @@ def main(config: argparse.Namespace) -> None:
     trainer.train()
 
     ## Save the best model.
-    # model_dir = list(Path(config.ckpt).glob("*"))[-1]
-
-    # torch.save({
-    #     "config": config,
-    #     "tokenizer": tokenizer,
-    #     "model": trainer.model.state_dict(),
-    # }, Path(model_dir, ".".join([config.model_fpath, "pth"])))
+    torch.save({
+        "config": config,
+        "tokenizer": tokenizer,
+        "model": trainer.model.state_dict(),
+    }, Path(output_dir, "latest_model.pth"))
 
 
 if __name__ == "__main__":

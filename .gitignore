@@ -1,6 +1,7 @@
 data/
 logs/
 ckpt/
+submission/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
