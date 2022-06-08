@@ -26,7 +26,7 @@ def get_rouge_fn(tokenizer):
         
         result = rouge_metric.compute(predictions=decoded_preds, references=decoded_labels)
         # Extract a few results
-        result = {key: value.mid.fmeasure * 100 for key, value in result.items()}
+        result = {key: value.mid.fmeasure for key, value in result.items()}
         
         # Add mean generated length
         prediction_lens = [np.count_nonzero(pred != tokenizer.pad_token_id) for pred in predictions]
