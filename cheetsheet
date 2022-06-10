@@ -24,3 +24,23 @@ python eval.py \
     --top_k 40 \
     --top_p .95 \
     --save_to submission
+
+python eval.py \
+    --test data/book/test \
+    --pretrained_model_name gogamza/kobart-base-v2 \
+    --gpu_id 1 \
+    --batch_size 256 \
+    --no_repeat_ngram_size 3 \
+    --top_k 40 \
+    --top_p .95 \
+    --save_to submission
+
+python eval.py \
+    --test data/paper/test \
+    --pretrained_model_name gogamza/kobart-base-v2 \
+    --gpu_id 1 \
+    --batch_size 256 \
+    --no_repeat_ngram_size 3 \
+    --top_k 40 \
+    --top_p .95 \
+    --save_to submission
