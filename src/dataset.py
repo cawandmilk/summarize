@@ -176,3 +176,82 @@ class BARTAbstractiveSummarizationDataset(torch.utils.data.Dataset):
             ),
             "labels": torch.from_numpy(labels).to(torch.long),
         }
+
+
+class GPTAbstractiveSummarizationDataset(torch.utils.data.Dataset):
+    def __init__(
+        self,
+        tokenizer,
+        file_dirs: List[str],
+        max_len: int = 512,
+        ignore_index: int = -100,
+        mode: str = "train",
+    ):
+        super(GPTAbstractiveSummarizationDataset, self).__init__()
+
+        self.tokenizer = tokenizer
+        self.file_dirs = file_dirs
+        self.max_len = max_len
+        self.ignore_index = ignore_index
+        self.mode = mode
+
+        ## Load raw data.
+        self.raw_data = list(
+            itertools.chain.from_iterable(
+                [
+                    get_data(file_dir, data_type=Path(file_dir).parts[-2])
+                    for file_dir in file_dirs
+                ]
+            )
+        )
+        LOGGER.info(f"[{self.mode}] All raw data loaded: {', '.join(file_dirs)}")
+
+        ## Pre-process data.
+        self.data = [
+            {key: make_clean(value) for key, value in instance.items()}
+            for instance in tqdm.tqdm(
+                self.raw_data, desc="Cleaning", total=len(self.raw_data)
+            )
+        ]
+        LOGGER.info(f"[{self.mode}] All data cleaned: {', '.join(file_dirs)}")
+
+        ## todo: tokenize using multi-processing.
+        self.data = [
+            {
+                key: np.array(self.tokenizer.encode(value))
+                for key, value in instance.items()
+            }
+            for instance in tqdm.tqdm(
+                self.data, desc="Tokenizeing", total=len(self.data)
+            )
+        ]
+        LOGGER.info(f"[{self.mode}] All data tokenized: {', '.join(file_dirs)}")
+
+    def _pad(self, text: List[int], token_id: int) -> np.ndarray:
+        ## Pad or truncate.
+        if len(text) < self.max_len:
+            pad = np.array([token_id] * (self.max_len - len(text)))
+            text = np.concatenate([text, pad])  ## pad last
+        else:
+            text = text[: self.max_len]  ## truncate last
+
+        return text
+
+    def __len__(self) -> int:
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        ## Fetch the instance.
+        instance = self.data[idx]
+
+        input_ids = self._pad(
+            instance["input"], token_id=self.tokenizer.pad_token_id
+        )  ## w/o special tokens
+
+        input_ids = [self.tokenizer.bos_token_id] + self.tokenizer.encode("[다음 문장을 요약하세요] \n") + list(input_ids) + self.tokenizer.encode("\n[요약 결과]\n")
+        labels = self._pad(instance["label"], token_id=self.tokenizer.pad_token_id)
+
+        return {
+            "input_ids": torch.from_numpy(np.array(input_ids)),
+            "labels": torch.from_numpy(np.array(labels)),
+        }

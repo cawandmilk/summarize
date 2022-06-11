@@ -3,7 +3,7 @@ import datasets
 import numpy as np
 
 
-def get_rouge_fn(tokenizer):
+def get_rouge_fn(tokenizer, is_gpt: bool = False):
     ## Get a global metric.
     rouge_metric = datasets.load_metric("rouge")
 
@@ -19,10 +19,16 @@ def get_rouge_fn(tokenizer):
         ##  - https://huggingface.co/docs/transformers/v4.19.2/en/main_classes/keras_callbacks#transformers.KerasMetricCallback.example
         ##  - https://colab.research.google.com/github/huggingface/notebooks/blob/master/examples/summarization.ipynb
 
-        decoded_preds = tokenizer.batch_decode(predictions, skip_special_tokens=True)
-        # Replace -100 in the labels as we can't decode them.
-        labels = np.where(labels != -100, labels, tokenizer.pad_token_id)
-        decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
+        if is_gpt:
+            decoded_preds = tokenizer.batch_decode(predictions, skip_special_tokens=True)
+            decoded_preds = [i.split("\n[요약 결과]\n")[-1] for i in decoded_preds]
+            decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
+            
+        else:
+            decoded_preds = tokenizer.batch_decode(predictions, skip_special_tokens=True)
+            # Replace -100 in the labels as we can't decode them.
+            labels = np.where(labels != -100, labels, tokenizer.pad_token_id)
+            decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
 
         result = rouge_metric.compute(
             predictions=decoded_preds, references=decoded_labels

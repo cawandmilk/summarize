@@ -13,8 +13,9 @@ import pandas as pd
 from pathlib import Path
 from typing import List
 
+from src.dataset import GPTAbstractiveSummarizationDataset
 from src.metrics import get_rouge_fn
-from train import get_tokenizer_and_model, get_datasets
+from train import get_tokenizer_and_model
 
 
 LOGGER = logging.getLogger(__name__)
@@ -71,7 +72,7 @@ def define_argparser() -> argparse.Namespace:
     p.add_argument(
         "--batch_size",
         type=int,
-        default=256,
+        default=64,
         help=" ".join(
             [
                 "Default=%(default)s",
@@ -168,6 +169,15 @@ def define_logger(config: argparse.Namespace) -> None:
     logging.basicConfig(level=level, format=log_format)
 
 
+def get_datasets_for_gpt(config, tokenizer, file_dirs: List[str], max_len: int, mode: str = "train"):
+    return GPTAbstractiveSummarizationDataset(
+        tokenizer=tokenizer,
+        file_dirs=file_dirs,
+        max_len=max_len,
+        mode=mode,
+    )
+
+
 def save_predictions(
     config: argparse.Namespace, outputs: List[dict], file_path: str
 ) -> Path:
@@ -208,8 +218,9 @@ def main(config: argparse.Namespace) -> None:
         raise AssertionError()
 
     ## Get test dataset and generate a dataloader.
-    ts_ds = get_datasets(
+    ts_ds = get_datasets_for_gpt(
         config,
+        tokenizer,
         file_dirs=config.test,
         max_len=config.tar_max_len,
         mode="test",
@@ -222,7 +233,7 @@ def main(config: argparse.Namespace) -> None:
     )
 
     ## Get a rouge scoreing function.
-    rouge_fn = get_rouge_fn(tokenizer)
+    rouge_fn = get_rouge_fn(tokenizer, is_gpt=True)
 
     ## Inference.
     with torch.no_grad():
@@ -240,19 +251,16 @@ def main(config: argparse.Namespace) -> None:
             for mini_batch in ts_loader:
                 ## Unpack.
                 input_ids = mini_batch["input_ids"]
-                attention_mask = mini_batch["attention_mask"]
                 labels = mini_batch["labels"]
 
                 ## Upload to cuda.
                 input_ids = input_ids.to(device)
-                attention_mask = attention_mask.to(device)
 
                 ## Generate.
                 output = model.generate(
                     input_ids,
-                    attention_mask=attention_mask,
-                    max_length=config.tar_max_len,  ## maximum summarization size
-                    min_length=config.tar_max_len // 4,  ## minimum summarization size
+                    max_length=input_ids.size(0) + config.tar_max_len,  ## maximum summarization size
+                    min_length=input_ids.size(0),  ## minimum summarization size
                     early_stopping=True,  ## stop the beam search when at least 'num_beams' sentences are finished per batch
                     # num_beams=config.beam_size,                 ## beam search size
                     bos_token_id=tokenizer.bos_token_id,  ## <s> = 0
@@ -263,6 +271,7 @@ def main(config: argparse.Namespace) -> None:
                     top_k=config.top_k,
                     top_p=config.top_p,
                 )
+
 
                 ## Before decoding, get rouge score first.
                 rouges.append(

@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import List
 
 from src.dataset import BARTAbstractiveSummarizationDataset
+from src.models import get_tokenizer_and_model
 
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -205,17 +206,6 @@ def get_datasets(config, file_dirs: List[str], max_len: int, mode: str = "train"
     )
 
 
-def get_tokenizer_and_model(config: argparse.Namespace) -> tuple:
-    tokenizer = transformers.PreTrainedTokenizerFast.from_pretrained(
-        config.pretrained_model_name
-    )
-    model = transformers.BartForConditionalGeneration.from_pretrained(
-        config.pretrained_model_name
-    )
-
-    return tokenizer, model
-
-
 # def get_optimizer_and_scheduler(config: argparse.Namespace, model, n_warmup_steps: int, n_total_iterations: int) -> tuple:
 #     if config.use_radam:
 #         optimizer = torch.optim.RAdam(model.parameters(), lr=config.lr)
@@ -272,7 +262,7 @@ def main(config: argparse.Namespace) -> None:
     )
 
     ## Get tokenizer and model.
-    tokenizer, model = get_tokenizer_and_model(config)
+    tokenizer, model = get_tokenizer_and_model(config.pretrained_model_name)
 
     ## Path arguments.
     nowtime = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
