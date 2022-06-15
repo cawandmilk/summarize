@@ -1,5 +1,3 @@
-> 📋 A template README.md for code accompanying a Machine Learning paper
-
 # Abstractive Summarization for Book and Paper Documents
 
 This repository is the official implementation for the `Natural Language Processing` (GSI7625.01-00) course at Yonsei University in the first semester of 2022.
@@ -179,17 +177,17 @@ We do not publish the weights file; we publish all the code needed to reproduce 
 
 Our model achieves the following performance on :
 
-|                      |            | Book \[8\] |      |       | Paper \[9\] |      |       | Total \[8,9\] |      |       |
-| -------------------- | :--------: | ---------: | ---: | ----: | ----------: | ---: | ----: | ------------: | ---: | ----: |
-| Architecture         | Fine-tuned |         R1 |   R2 |    RL |          R1 |   R2 |    RL |            R1 |   R2 |    RL |
-| KoBART V1 \[1\]      |     -      |      10.82 | 3.02 | 10.57 |       11.99 | 4.07 | 11.80 |         11.60 | 3.68 | 11.38 |
-| KoBART V2 \[2\]      |     -      |      10.18 | 3.14 |  9.93 |       11.95 | 4.93 | 11.69 |         11.34 | 4.28 | 11.09 |
-| KoBART-HG-SM \[3\]   |     ✓      |      13.19 | 4.05 | 12.94 |       14.76 | 5.99 | 14.56 |         14.22 | 5.30 | 14.02 |
-| KoBART-SM \[4\]      |     ✓      |      14.87 | 4.64 | 14.65 |       15.83 | 6.39 | 15.66 |         15.48 | 5.74 | 15.32 |
-| KoGPT2 \[5\]         |     -      |       3.01 | 0.48 |  2.95 |        2.47 | 0.56 |  2.40 |          2.66 | 0.53 |  2.60 |
-| Ko-GPT-Trinity \[6\] |     -      |       4.77 | 0.99 |  4.61 |        4.32 | 0.99 |  4.16 |          4.48 | 0.98 |  4.33 |
-| KoGPT \[7\]          |     -      |       6.57 | 1.52 |  6.40 |        7.20 | 2.05 |  7.04 |          6.99 | 1.85 |  5.82 |
-| **Ours**             |     ✓      |      15.75 | 4.82 | 15.54 |       17.20 | 7.08 | 17.07 |         16.69 | 6.27 | 16.53 |
+|                      |            |  Book | \[8\] |       | Paper | \[9\] |       | Total | \[8,9\] |       |
+| -------------------- | :--------: | ----: | ----: | ----: | ----: | ----: | ----: | ----: | ------: | ----: |
+| Architecture         | Fine-tuned |    R1 |    R2 |    RL |    R1 |    R2 |    RL |    R1 |      R2 |    RL |
+| KoBART V1 \[1\]      |     -      | 10.82 |  3.02 | 10.57 | 11.99 |  4.07 | 11.80 | 11.60 |    3.68 | 11.38 |
+| KoBART V2 \[2\]      |     -      | 10.18 |  3.14 |  9.93 | 11.95 |  4.93 | 11.69 | 11.34 |    4.28 | 11.09 |
+| KoBART-HG-SM \[3\]   |     ✓      | 13.19 |  4.05 | 12.94 | 14.76 |  5.99 | 14.56 | 14.22 |    5.30 | 14.02 |
+| KoBART-SM \[4\]      |     ✓      | 14.87 |  4.64 | 14.65 | 15.83 |  6.39 | 15.66 | 15.48 |    5.74 | 15.32 |
+| KoGPT2 \[5\]         |     -      |  3.01 |  0.48 |  2.95 |  2.47 |  0.56 |  2.40 |  2.66 |    0.53 |  2.60 |
+| Ko-GPT-Trinity \[6\] |     -      |  4.77 |  0.99 |  4.61 |  4.32 |  0.99 |  4.16 |  4.48 |    0.98 |  4.33 |
+| KoGPT \[7\]          |     -      |  6.57 |  1.52 |  6.40 |  7.20 |  2.05 |  7.04 |  6.99 |    1.85 |  5.82 |
+| **Ours**             |     ✓      | 15.75 |  4.82 | 15.54 | 17.20 |  7.08 | 17.07 | 16.69 |    6.27 | 16.53 |
 
 > We calculated the rouge scores using the `datasets` library. We are analyzing why the overall score has been leveled down. If you refer to this table, rather than comparing absolute scores, you should use it to the extent of figuring out which model is **relatively better**.
 
