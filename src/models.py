@@ -2,8 +2,37 @@ import transformers
 
 
 def get_tokenizer_and_model(pretrained_model_name) -> tuple:
-
     def _get_gogamza_bart():
+        tokenizer = transformers.PreTrainedTokenizerFast.from_pretrained(
+            pretrained_model_name,
+        )
+        model = transformers.BartForConditionalGeneration.from_pretrained(
+            pretrained_model_name,
+        )
+
+        return tokenizer, model
+
+    def _get_gogamza_bart_2():
+        tokenizer = transformers.PreTrainedTokenizerFast.from_pretrained(
+            pretrained_model_name,
+        )
+        model = transformers.BartForConditionalGeneration.from_pretrained(
+            pretrained_model_name,
+        )
+
+        return tokenizer, model
+
+    def _get_gogamza_bart_summarization():
+        tokenizer = transformers.PreTrainedTokenizerFast.from_pretrained(
+            pretrained_model_name,
+        )
+        model = transformers.BartForConditionalGeneration.from_pretrained(
+            pretrained_model_name,
+        )
+
+        return tokenizer, model
+
+    def _get_digit_bart_summarization():
         tokenizer = transformers.PreTrainedTokenizerFast.from_pretrained(
             pretrained_model_name,
         )
@@ -18,9 +47,9 @@ def get_tokenizer_and_model(pretrained_model_name) -> tuple:
         tokenizer = transformers.PreTrainedTokenizerFast.from_pretrained(
             pretrained_model_name,
             bos_token="</s>",
-            eos_token="</s>", 
+            eos_token="</s>",
             unk_token="<unk>",
-            pad_token="<pad>", 
+            pad_token="<pad>",
             mask_token="<mask>",
         )
         model = transformers.GPT2LMHeadModel.from_pretrained(
@@ -37,9 +66,9 @@ def get_tokenizer_and_model(pretrained_model_name) -> tuple:
         tokenizer = transformers.PreTrainedTokenizerFast.from_pretrained(
             pretrained_model_name,
             bos_token="</s>",
-            eos_token="</s>", 
+            eos_token="</s>",
             unk_token="<unk>",
-            pad_token="<pad>", 
+            pad_token="<pad>",
             mask_token="<mask>",
         )
         model = transformers.GPT2LMHeadModel.from_pretrained(
@@ -57,9 +86,9 @@ def get_tokenizer_and_model(pretrained_model_name) -> tuple:
             pretrained_model_name,
             revision="KoGPT6B-ryan1.5b-float16",
             bos_token="</s>",
-            eos_token="</s>", 
+            eos_token="</s>",
             unk_token="<unk>",
-            pad_token="<pad>", 
+            pad_token="<pad>",
             mask_token="<mask>",
         )
         model = transformers.AutoModelForCausalLM.from_pretrained(
@@ -75,7 +104,12 @@ def get_tokenizer_and_model(pretrained_model_name) -> tuple:
 
     ## Get one.
     return {
+        ## BART.
         "gogamza/kobart-base-v1": _get_gogamza_bart,
+        "gogamza/kobart-base-v2": _get_gogamza_bart_2,
+        "gogamza/kobart-summarization": _get_gogamza_bart_summarization,
+        "digit82/kobart-summarization": _get_digit_bart_summarization,
+        ## GPT.
         "skt/kogpt2-base-v2": _get_skt_kogpt2,
         "skt/ko-gpt-trinity-1.2B-v0.5": _get_skt_kogpt_trinity,
         "kakaobrain/kogpt": _get_kakao_kogpt,

@@ -248,7 +248,12 @@ class GPTAbstractiveSummarizationDataset(torch.utils.data.Dataset):
             instance["input"], token_id=self.tokenizer.pad_token_id
         )  ## w/o special tokens
 
-        input_ids = [self.tokenizer.bos_token_id] + self.tokenizer.encode("[다음 문장을 요약하세요] \n") + list(input_ids) + self.tokenizer.encode("\n[요약 결과]\n")
+        input_ids = (
+            [self.tokenizer.bos_token_id]
+            + self.tokenizer.encode("[다음 문장을 요약하세요] \n")
+            + list(input_ids)
+            + self.tokenizer.encode("\n[요약 결과]\n")
+        )
         labels = self._pad(instance["label"], token_id=self.tokenizer.pad_token_id)
 
         return {

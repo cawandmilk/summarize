@@ -27,10 +27,10 @@ def define_argparser() -> argparse.Namespace:
         "--test",
         type=str,
         nargs="+",
-        # default=[
-        #     "data/book/test",
-        #     "data/paper/test",
-        # ],
+        default=[
+            "data/book/test",
+            "data/paper/test",
+        ],
         help=" ".join(
             [
                 "Default=%(default)s",
@@ -185,7 +185,7 @@ def main(config: argparse.Namespace) -> None:
     ## Define logger.
     define_logger(config)
 
-    if config.model_fpath != None and config.pretrained_model_name == None:
+    if config.model_fpath != None:
         ## Load the latest model and configuration.
         saved_data = torch.load(config.model_fpath, map_location="cpu")
 
@@ -193,7 +193,7 @@ def main(config: argparse.Namespace) -> None:
         train_config = saved_data["config"]
 
         # tokenizer = saved_data["tokenizer"]
-        tokenizer, model = get_tokenizer_and_model(train_config)
+        tokenizer, model = get_tokenizer_and_model(train_config.pretrained_model_name)
         LOGGER.info(f"Tokenizer and model loaded: {train_config.pretrained_model_name}")
 
         model.load_state_dict(latest_checkpoint)
@@ -204,8 +204,8 @@ def main(config: argparse.Namespace) -> None:
         tokenizer, model = get_tokenizer_and_model(config.pretrained_model_name)
         LOGGER.info(f"Tokenizer and model loaded: {config.pretrained_model_name}")
 
-    else:
-        raise AssertionError()
+    # else:
+    #     raise AssertionError()
 
     ## Get test dataset and generate a dataloader.
     ts_ds = get_datasets(
@@ -254,11 +254,9 @@ def main(config: argparse.Namespace) -> None:
                     max_length=config.tar_max_len,  ## maximum summarization size
                     min_length=config.tar_max_len // 4,  ## minimum summarization size
                     early_stopping=True,  ## stop the beam search when at least 'num_beams' sentences are finished per batch
-                    # num_beams=config.beam_size,                 ## beam search size
                     bos_token_id=tokenizer.bos_token_id,  ## <s> = 0
                     eos_token_id=tokenizer.eos_token_id,  ## <\s> = 1
                     pad_token_id=tokenizer.pad_token_id,  ## 3
-                    # length_penalty=config.length_penalty,       ## value > 1.0 in order to encourage the model to produce longer sequences
                     no_repeat_ngram_size=config.no_repeat_ngram_size,  ## same as 'trigram blocking'
                     top_k=config.top_k,
                     top_p=config.top_p,

@@ -1,5 +1,4 @@
 import torch
-import datasets
 import transformers
 
 import argparse
@@ -33,6 +32,7 @@ def define_argparser() -> argparse.Namespace:
         ],
         help=" ".join(
             [
+                "The directory path you want to use for training.",
                 "Default=%(default)s",
             ]
         ),
@@ -43,6 +43,7 @@ def define_argparser() -> argparse.Namespace:
         default="logs",
         help=" ".join(
             [
+                "Path where the model logs will be stored.",
                 "Default=%(default)s",
             ]
         ),
@@ -53,6 +54,7 @@ def define_argparser() -> argparse.Namespace:
         default="ckpt",
         help=" ".join(
             [
+                "Path where the model checkpoints will be stored.",
                 "Default=%(default)s",
             ]
         ),
@@ -138,13 +140,6 @@ def define_argparser() -> argparse.Namespace:
             ]
         ),
     )
-    # p.add_argument(
-    #     "--use_radam",
-    #     action="store_false",  ## default: true
-    #     help=" ".join([
-    #         "Default=%(default)s",
-    #     ]),
-    # )
     p.add_argument(
         "--inp_max_len",
         type=int,
@@ -164,8 +159,9 @@ def define_argparser() -> argparse.Namespace:
         default=160,
         help=" ".join(
             [
-                "A value for slicing the output data. It is used for model inference.",
-                "if the value is too small, the summary may be truncated before completion.",
+                "A value for slicing the output data. It is used for model",
+                "inference. If the value is too small, the summary may be",
+                "truncated before completion.",
                 "Default=%(default)s",
             ]
         ),
@@ -206,38 +202,6 @@ def get_datasets(config, file_dirs: List[str], max_len: int, mode: str = "train"
     )
 
 
-# def get_optimizer_and_scheduler(config: argparse.Namespace, model, n_warmup_steps: int, n_total_iterations: int) -> tuple:
-#     if config.use_radam:
-#         optimizer = torch.optim.RAdam(model.parameters(), lr=config.lr)
-#     else:
-#         ## Prepare optimizer and schedule (linear warmup and decay)
-#         no_decay = ["bias", "LayerNorm.weight"]
-#         optimizer_grouped_parameters = [
-#             {
-#                 "params": [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)],
-#                 "weight_decay": 0.01,
-#             },
-#             {
-#                 "params": [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)],
-#                 "weight_decay": 0.0,
-#             }
-#         ]
-
-#         optimizer = torch.optim.AdamW(
-#             optimizer_grouped_parameters,
-#             lr=config.lr,
-#             eps=config.adam_epsilon,
-#         )
-
-#     scheduler = transformers.get_linear_schedule_with_warmup(
-#         optimizer,
-#         n_warmup_steps,
-#         n_total_iterations,
-#     )
-
-#     return optimizer, scheduler
-
-
 def main(config: argparse.Namespace) -> None:
     def print_config(config: argparse.Namespace) -> None:
         pprint.PrettyPrinter(indent=4, sort_dicts=False).pprint(vars(config))
@@ -253,12 +217,6 @@ def main(config: argparse.Namespace) -> None:
         file_dirs=config.train,
         max_len=config.inp_max_len,
         mode="train",
-    )
-    ts_ds = get_datasets(
-        config,
-        file_dirs=config.test,
-        max_len=config.tar_max_len,
-        mode="test",
     )
 
     ## Get tokenizer and model.
@@ -276,12 +234,9 @@ def main(config: argparse.Namespace) -> None:
     training_args = transformers.Seq2SeqTrainingArguments(
         output_dir=output_dir,
         do_train=True,
-        do_eval=True,
+        do_eval=False,
         do_predict=False,
-        evaluation_strategy="epoch",
-        # prediction_loss_only=True,
         per_device_train_batch_size=config.per_replica_batch_size,
-        per_device_eval_batch_size=config.per_replica_batch_size,
         gradient_accumulation_steps=config.gradient_accumulation_steps,
         # eval_accumulation_steps=config.eval_accumulation_steps,
         learning_rate=config.lr,
@@ -291,13 +246,10 @@ def main(config: argparse.Namespace) -> None:
         logging_dir=logging_dir,
         logging_strategy="steps",
         logging_steps=10,
-        save_strategy="epoch",
-        # save_total_limit=3,
-        # save_steps=1000,
+        save_strategy="no",
         fp16=True,
         dataloader_num_workers=4,
         disable_tqdm=False,
-        # sharded_ddp="zero_dp_2",
         load_best_model_at_end=True,
         generation_max_length=config.tar_max_len,  ## 256
     )
@@ -307,14 +259,7 @@ def main(config: argparse.Namespace) -> None:
         model=model,
         args=training_args,
         train_dataset=tr_ds,
-        eval_dataset=ts_ds,
         tokenizer=tokenizer,
-        # optimizers=get_optimizer_and_scheduler(
-        #     config,
-        #     model,
-        #     n_warmup_steps=n_warmup_steps,
-        #     n_total_iterations=n_total_iterations,
-        # )
     )
 
     ## Train.

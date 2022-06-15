@@ -1,5 +1,4 @@
 import torch
-import transformers
 
 import argparse
 import logging
@@ -28,10 +27,10 @@ def define_argparser() -> argparse.Namespace:
         "--test",
         type=str,
         nargs="+",
-        # default=[
-        #     "data/book/test",
-        #     "data/paper/test",
-        # ],
+        default=[
+            "data/book/test",
+            "data/paper/test",
+        ],
         help=" ".join(
             [
                 "Default=%(default)s",
@@ -169,7 +168,9 @@ def define_logger(config: argparse.Namespace) -> None:
     logging.basicConfig(level=level, format=log_format)
 
 
-def get_datasets_for_gpt(config, tokenizer, file_dirs: List[str], max_len: int, mode: str = "train"):
+def get_datasets_for_gpt(
+    config, tokenizer, file_dirs: List[str], max_len: int, mode: str = "train"
+):
     return GPTAbstractiveSummarizationDataset(
         tokenizer=tokenizer,
         file_dirs=file_dirs,
@@ -259,8 +260,9 @@ def main(config: argparse.Namespace) -> None:
                 ## Generate.
                 output = model.generate(
                     input_ids,
-                    max_length=input_ids.size(0) + config.tar_max_len,  ## maximum summarization size
-                    min_length=input_ids.size(0),  ## minimum summarization size
+                    max_length=input_ids.size(1)
+                    + config.tar_max_len,  ## maximum summarization size
+                    min_length=input_ids.size(1),  ## minimum summarization size
                     early_stopping=True,  ## stop the beam search when at least 'num_beams' sentences are finished per batch
                     # num_beams=config.beam_size,                 ## beam search size
                     bos_token_id=tokenizer.bos_token_id,  ## <s> = 0
@@ -271,7 +273,6 @@ def main(config: argparse.Namespace) -> None:
                     top_k=config.top_k,
                     top_p=config.top_p,
                 )
-
 
                 ## Before decoding, get rouge score first.
                 rouges.append(
